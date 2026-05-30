@@ -1,55 +1,50 @@
 #include "Sorts.h"
-#include <algorithm>  // std::swap, std::copy
+#include <algorithm> 
+using std::swap;
 
-// bubbleSort teoría dicta O(n²) promedio/peor caso y O(n) es el mejor caso 
+// bubbleSort
 void Sorts::bubbleSort(int arr[], int tamanio) {
     for (int i = 0; i < tamanio - 1; i++) {
-        bool huboIntercambio = false;
-
+        bool huboCambio = false;
         for (int j = 0; j < tamanio - 1 - i; j++) {
             if (arr[j] > arr[j + 1]) {
-                std::swap(arr[j], arr[j + 1]);
-                huboIntercambio = true;
+                swap(arr[j], arr[j + 1]);
+                huboCambio = true;
             }
         }
-
-        if (!huboIntercambio) break;
+        if (!huboCambio) break;
     }
 }
 
-// selectionSort teoría dicta O(n²) siempre 
+// selectionSort
 void Sorts::selectionSort(int arr[], int tamanio) {
     for (int i = 0; i < tamanio - 1; i++) {
         int indiceMenor = i;
-
         for (int j = i + 1; j < tamanio; j++) {
             if (arr[j] < arr[indiceMenor]) {
-                indiceMenor = j;
+                int aux = arr[j];
+                arr[j] = arr[indiceMenor];
+                arr[indiceMenor] = aux;
             }
         }
-
-        if (indiceMenor != i) {
-            std::swap(arr[i], arr[indiceMenor]);
-        }
     }
 }
 
-// insertionSort teoría dicta O(n²) promedio/peor caso y O(n) es el mejor caso 
+// insertionSort
 void Sorts::insertionSort(int arr[], int tamanio) {
-    for (int i = 1; i < tamanio; i++) {
-        int clave = arr[i];
-        int j     = i - 1;
+    if (tamanio <= 1) return;
+    insertionSort(arr, tamanio - 1);
 
-        while (j >= 0 && arr[j] > clave) {
-            arr[j + 1] = arr[j];
-            j--;
-        }
+    int ultimo = arr[tamanio - 1];
+    int pos = tamanio - 2;
 
-        arr[j + 1] = clave;
+    for (; pos >= 0 && arr[pos] > ultimo; pos--) {
+        arr[pos + 1] = arr[pos];
     }
+    arr[pos + 1] = ultimo;
 }
 
-// mergeSort teoría dicta O(nlogn) siempre
+// mergeSort
 void Sorts::mergeSort(int arr[], int tamanio) {
     if (tamanio < 2) return;
     mergeSortHelper(arr, 0, tamanio - 1);
@@ -57,126 +52,104 @@ void Sorts::mergeSort(int arr[], int tamanio) {
 
 void Sorts::mergeSortHelper(int arr[], int izq, int der) {
     if (izq >= der) return;
-
-    int mid = izq + (der - izq) / 2;   // evita desbordamiento vs (izq+der)/2
-
-    mergeSortHelper(arr, izq, mid);
-    mergeSortHelper(arr, mid + 1, der);
-    fusionar(arr, izq, mid, der);
+    int corte = izq + (der - izq) / 2;
+    mergeSortHelper(arr, izq, corte);
+    mergeSortHelper(arr, corte + 1, der);
+    fusionar(arr, izq, corte, der);
 }
 
 void Sorts::fusionar(int arr[], int izq, int mid, int der) {
-    int tamanioIzq = mid - izq + 1;
-    int tamanioDer = der - mid;
+    int n1 = mid - izq + 1;
+    int n2 = der - mid;
 
-    // Buffers temporales
-    int* izqArr = new int[tamanioIzq];
-    int* derArr = new int[tamanioDer];
+    int* izquierda = new int[n1];
+    int* derecha   = new int[n2];
 
-    std::copy(arr + izq,       arr + izq + tamanioIzq, izqArr);
-    std::copy(arr + mid + 1,   arr + mid + 1 + tamanioDer, derArr);
+    for (int x = 0; x < n1; x++) 
+        izquierda[x] = arr[izq + x];
+    for (int x = 0; x < n2; x++) 
+        derecha[x]   = arr[mid + 1 + x];
 
-    int i = 0, j = 0, k = izq;
+    int a, b, pos = izq;
+    a = b = 0;
 
-    while (i < tamanioIzq && j < tamanioDer) {
-        if (izqArr[i] <= derArr[j]) {
-            arr[k++] = izqArr[i++];
-        } else {
-            arr[k++] = derArr[j++];
-        }
-    }
+    while (a < n1 && b < n2)
+        arr[pos++] = (izquierda[a] <= derecha[b]) ? izquierda[a++] : derecha[b++];
 
-    while (i < tamanioIzq) arr[k++] = izqArr[i++];
-    while (j < tamanioDer)  arr[k++] = derArr[j++];
+    while (a < n1) arr[pos++] = izquierda[a++];
+    while (b < n2) arr[pos++] = derecha[b++];
 
-    delete[] izqArr;
-    delete[] derArr;
+    delete[] izquierda;
+    delete[] derecha;
 }
 
-// heapSort teoría dicta O(nlogn) siempre, casos especiales es O(n)
+// heapSort
 void Sorts::heapSort(int arr[], int tamanio) {
-    // Construir el max-heap
     for (int i = tamanio / 2 - 1; i >= 0; i--) {
         heapify(arr, tamanio, i);
     }
 
-    // Extraer elementos del heap de mayor a menor
     for (int i = tamanio - 1; i > 0; i--) {
-        std::swap(arr[0], arr[i]);
+        swap(arr[0], arr[i]);
         heapify(arr, i, 0);
     }
 }
 
 void Sorts::heapify(int arr[], int tamanio, int raiz) {
-    int mayor    = raiz;
-    int hijoIzq  = 2 * raiz + 1;
-    int hijoDer  = 2 * raiz + 2;
+    while (true) {
+        int mayor = raiz;
+        int hijoIzq = 2 * raiz + 1;
+        int hijoDer = 2 * raiz + 2;
 
-    if (hijoIzq < tamanio && arr[hijoIzq] > arr[mayor]) mayor = hijoIzq;
-    if (hijoDer < tamanio && arr[hijoDer] > arr[mayor]) mayor = hijoDer;
+        if (hijoIzq < tamanio && arr[hijoIzq] > arr[mayor])
+            mayor = hijoIzq;
+        if (hijoDer < tamanio && arr[hijoDer] > arr[mayor])
+            mayor = hijoDer;
+        if (mayor == raiz)
+            break;
 
-    if (mayor != raiz) {
-        std::swap(arr[raiz], arr[mayor]);
-        heapify(arr, tamanio, mayor);
+        swap(arr[raiz], arr[mayor]);
+        raiz = mayor;
     }
 }
 
-// quickSort teoría dicta O(nlogn) promedio y O(n²) peor caso
-
+// quickSort
 void Sorts::quickSort(int arr[], int tamanio) {
-    if (tamanio < 2) return;
+    if (tamanio <= 1) return;
     quickSortHelper(arr, 0, tamanio - 1);
 }
 
-void Sorts::quickSortHelper(int arr[], int izq, int der) {
-    // Para subarreglos pequeños, insertion sort es más eficiente
-    if (der - izq < 16) {
-        for (int i = izq + 1; i <= der; i++) {
-            int clave = arr[i];
-            int j     = i - 1;
-            while (j >= izq && arr[j] > clave) {
-                arr[j + 1] = arr[j];
-                j--;
-            }
-            arr[j + 1] = clave;
+void Sorts::quickSortHelper(int arr[], int izquierdo, int derecho) {
+    if (izquierdo >= derecho) return;
+
+    int pivote_final = particion(arr, izquierdo, derecho);
+    quickSortHelper(arr, izquierdo, pivote_final - 1);
+    quickSortHelper(arr, pivote_final + 1, derecho);
+}
+
+int Sorts::medianaDeTres(int arr[], int izquierdo, int derecho) {
+    int medio = izquierdo + (derecho - izquierdo) / 2;
+    if (arr[izquierdo] > arr[medio])
+        swap(arr[izquierdo], arr[medio]);
+    if (arr[izquierdo] > arr[derecho])
+        swap(arr[izquierdo], arr[derecho]);
+    if (arr[medio] > arr[derecho])
+        swap(arr[medio], arr[derecho]);
+
+    swap(arr[medio], arr[derecho - 1]);
+    return arr[derecho - 1];
+}
+
+int Sorts::particion(int arr[], int izquierdo, int derecho) {
+    int pivote = medianaDeTres(arr, izquierdo, derecho);
+    int i = izquierdo - 1;
+
+    for (int j = izquierdo; j < derecho - 1; j++) {
+        if (arr[j] <= pivote) {
+            i++;
+            swap(arr[i], arr[j]);
         }
-        return;
     }
-
-    int indicePivote = particion(arr, izq, der);
-    quickSortHelper(arr, izq, indicePivote - 1);
-    quickSortHelper(arr, indicePivote + 1, der);
-}
-
-int Sorts::medianaDeTres(int arr[], int izq, int der) {
-    int mid = izq + (der - izq) / 2;
-
-    // Ordena los tres candidatos en su lugar y retorna el índice del medio
-    if (arr[izq] > arr[mid]) std::swap(arr[izq], arr[mid]);
-    if (arr[izq] > arr[der]) std::swap(arr[izq], arr[der]);
-    if (arr[mid] > arr[der]) std::swap(arr[mid], arr[der]);
-
-    // Coloca el pivote en der-1 para dejarlo fuera de la partición
-    std::swap(arr[mid], arr[der - 1]);
-    return der - 1;
-}
-
-int Sorts::particion(int arr[], int izq, int der) {
-    int indicePivote = medianaDeTres(arr, izq, der);
-    int pivote       = arr[indicePivote];
-
-    int i = izq;
-    int j = der - 1;
-
-    while (true) {
-        while (arr[++i] < pivote) {}
-        while (arr[--j] > pivote) {}
-
-        if (i >= j) break;
-        std::swap(arr[i], arr[j]);
-    }
-
-    // Restaura el pivote a su posición final
-    std::swap(arr[i], arr[der - 1]);
-    return i;
+    swap(arr[i + 1], arr[derecho - 1]);
+    return i + 1;
 }
